@@ -3,10 +3,8 @@ package mods.eln.mechanical
 import mods.eln.misc.*
 import mods.eln.node.NodeBase
 import mods.eln.node.transparent.*
-import mods.eln.sim.ElectricalLoad
 import mods.eln.sim.IProcess
 import mods.eln.sim.nbt.NbtElectricalGateInput
-import mods.eln.sim.nbt.NbtElectricalLoad
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
@@ -29,7 +27,7 @@ open class SteamTurbineDescriptor(baseName: String, obj: Obj3D) :
     // Well, this is a *steam* turbine.
     // TODO: Factor out into an abstract turbine descriptor.
     open val fluidDescription = "Steam"
-    open val fluidType = "steam"
+    open val fluidTypes = arrayOf("steam")
     // Width of the efficiency curve.
     // <1 means "Can't be started without power".
     open val efficiencyCurve = 1.1
@@ -60,7 +58,7 @@ class GasTurbineDescriptor(basename: String, obj: Obj3D) :
         SteamTurbineDescriptor(basename, obj) {
     // The main benefit of gas turbines.
     override val inertia = 5f;
-    // 1B in 3 minutes at max power.
+    // 1B in 3 minutes at max power, same as a 27LP Railcraft boiler.
     override val fluidConsumption = 1000f / 180f
     // Computed to equal a single 27LP Railcraft boiler. This makes gas turbines slightly less
     // efficient than going through steam, though at some point in the future you'll be able
@@ -68,14 +66,28 @@ class GasTurbineDescriptor(basename: String, obj: Obj3D) :
     // In short, it's 8.1kW.
     override val fluidPower = 8100f / fluidConsumption
     override val fluidDescription = "Gasoline"
-    override val fluidType = "fuel"
+    override val fluidTypes = arrayOf(
+            // Various gasoline equivalents, and light oils a small turbine can reasonably burn.
+            // These are all pretty close to each other in energy content.
+            "fuel",  // Buildcraft
+            "rc ethanol",  // RotaryCraft
+            "biofuel",  // Minefactory Reloaded
+            "bioethanol",  // Forestry
+            "biodiesel",  // Immersive Engineering
+            "kerosene",  // PneumaticCraft
+            "lpg",  // PneumaticCraft
+            "diesel",  // PneumaticCraft
+            "fuelgc",  // GalactiCraft
+            "naturalgas",  // Magneticraft
+            "lightoil"  // Magneticraft
+    )
     override val efficiencyCurve = 0.9
 }
 
 class TurbineElement(node : TransparentNode, desc_ : TransparentNodeDescriptor) :
         SimpleShaftElement(node, desc_) {
     val desc = desc_ as SteamTurbineDescriptor
-    val fluid = FluidRegistry.getFluid(desc.fluidType) ?: FluidRegistry.getFluid("lava")
+    val fluids = desc.fluidTypes.map { FluidRegistry.getFluid(it) }.filterNotNull().toTypedArray()
 
     val tank = TransparentNodeElementFluidHandler(1000)
     var steamRate = 0f
@@ -118,7 +130,12 @@ class TurbineElement(node : TransparentNode, desc_ : TransparentNodeDescriptor) 
 
     init {
         slowProcessList.add(turbineSlowProcess)
-        tank.setFilter(fluid)
+
+        tank.setFilter(if (fluids.isNotEmpty()) {
+            fluids
+        } else {
+            arrayOf(FluidRegistry.LAVA)
+        })
 
         electricalLoadList.add(throttle)
     }
