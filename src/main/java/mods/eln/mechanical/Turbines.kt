@@ -99,7 +99,6 @@ class GasTurbineDescriptor(basename: String, obj: Obj3D) :
             "biodiesel",  // Immersive Engineering
             "kerosene",  // PneumaticCraft
             "lpg",  // PneumaticCraft
-            "diesel",  // PneumaticCraft
             "fuelgc",  // GalactiCraft
             "naturalgas",  // Magneticraft
             "lightoil"  // Magneticraft
