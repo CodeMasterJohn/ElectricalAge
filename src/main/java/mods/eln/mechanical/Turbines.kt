@@ -55,7 +55,7 @@ abstract class TurbineDescriptor(baseName: String, obj: Obj3D) :
     }
 }
 
-open class SteamTurbineDescriptor(baseName: String, obj: Obj3D) :
+class SteamTurbineDescriptor(baseName: String, obj: Obj3D) :
         TurbineDescriptor(baseName, obj) {
     // Steam turbines are for baseload.
     override val inertia = 20f
